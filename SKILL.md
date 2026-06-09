@@ -356,7 +356,7 @@ If the user says yes:
    - Phase-specific gotcha → add a callout in the relevant phase section
    - Reference-file-level detail (build errors, composer patterns, smoke test steps) → add to the appropriate `references/*.md` file
 3. Do not rewrite existing content — add targeted rows or callouts only.
-4. Open a PR for the skill updates — do **not** commit directly on `main`. The skill lives at `~/.claude/skills/magento-upgrade/` — resolve the actual path before running git commands (it may differ per machine; check `find ~/.claude/skills -name SKILL.md` if unsure):
+4. **NEVER push directly to `main`.** Always open a PR — even for a single-line change. The exact sequence, no exceptions:
    ```bash
    cd ~/.claude/skills/magento-upgrade
    git checkout -b skill/lessons-<target_version>
@@ -367,6 +367,7 @@ If the user says yes:
      --title "skill(magento-upgrade): apply lessons from <target_version> upgrade" \
      --body "Folds lessons captured in \`tasks/lessons.md\` after the <target_version> upgrade into SKILL.md and the relevant reference files."
    ```
+   If the working tree is already clean when you reach this step, something committed for you — check `git log` and open a PR retroactively from that commit if it landed on `main` directly.
 
 ---
 
@@ -401,3 +402,4 @@ If the user says yes:
 | Treating the "Page Cache invalidated" admin banner as a failure | Expected after `setup:upgrade` — it marks `full_page` stale internally. Run `cache:clean full_page` or click Cache Management. Not a sign of a broken upgrade |
 | Using `composer update` without `-W` on a minor version bump | Minor bumps (e.g. 2.4.8→2.4.9) pull transitive framework changes (Symfony LTS, JWT, PHPUnit). Without `-W` the constraint tree fails to resolve. Use `-W` for any non-patch upgrade |
 | Reverting the MariaDB image tag to roll back after a minor upgrade | The upgraded data directory is incompatible with the older image — it will refuse to start. Rollback requires a full DB restore from the pre-upgrade dump |
+| Committing skill updates directly to `main` | **Never.** Always `git checkout -b skill/lessons-<version>` → commit → push → `gh pr create`. If the working tree is already clean, check `git log` — if the commit landed on `main`, open a retroactive PR |
