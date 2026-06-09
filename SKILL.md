@@ -356,11 +356,16 @@ If the user says yes:
    - Phase-specific gotcha → add a callout in the relevant phase section
    - Reference-file-level detail (build errors, composer patterns, smoke test steps) → add to the appropriate `references/*.md` file
 3. Do not rewrite existing content — add targeted rows or callouts only.
-4. Commit the skill updates separately from the upgrade branch. The skill lives at `~/.claude/skills/magento-upgrade/` — resolve the actual path before running git commands (it may differ per machine; check `find ~/.claude/skills -name SKILL.md` if unsure):
+4. Open a PR for the skill updates — do **not** commit directly on `main`. The skill lives at `~/.claude/skills/magento-upgrade/` — resolve the actual path before running git commands (it may differ per machine; check `find ~/.claude/skills -name SKILL.md` if unsure):
    ```bash
    cd ~/.claude/skills/magento-upgrade
+   git checkout -b skill/lessons-<target_version>
    git add SKILL.md references/
    git commit -m "skill(magento-upgrade): apply lessons from <target_version> upgrade"
+   git push -u origin skill/lessons-<target_version>
+   gh pr create \
+     --title "skill(magento-upgrade): apply lessons from <target_version> upgrade" \
+     --body "Folds lessons captured in \`tasks/lessons.md\` after the <target_version> upgrade into SKILL.md and the relevant reference files."
    ```
 
 ---
