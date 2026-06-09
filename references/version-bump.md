@@ -51,6 +51,21 @@ For major upgrades Magento sometimes releases RC candidates. If needed:
 
 Reset to `stable` after upgrade is complete.
 
+## Downgrading (version rollback)
+
+`composer update` will not downgrade — even with `-W`, it returns "Nothing to modify in lock file" if the lock already satisfies the constraint. Use `composer require` with an explicit version instead:
+
+```bash
+# Correct approach for a downgrade
+docker compose exec <service> composer require \
+  magento/product-community-edition:<target_version> \
+  --no-interaction -W -d /var/www/html
+```
+
+Note: `composer require` on the metapackage prints a warning ("does not function properly … use 'require-commerce' instead") but then runs `composer update` internally and resolves correctly. The warning is safe to ignore for open-source CE.
+
+After downgrading, the top-level `"version"` field in `composer.json` is **not** updated by `composer require` (it only touches the `require` section). Update it manually to match.
+
 ## Verifying After Composer Update
 
 ```bash
