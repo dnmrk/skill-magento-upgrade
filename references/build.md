@@ -87,26 +87,33 @@ docker compose exec db mariadb -uroot -p<root_pass> \
 docker compose exec <phpfpm> rm -f \
   /var/www/html/app/etc/env.php \
   /var/www/html/app/etc/config.php
+
+# 3. Clear compiled classes and static assets
+docker compose exec <phpfpm> rm -rf \
+  /var/www/html/generated/code \
+  /var/www/html/generated/metadata \
+  /var/www/html/pub/static/frontend \
+  /var/www/html/pub/static/adminhtml
 ```
 
 Then run `setup:install` without `--cleanup-database` (the DB is already empty).
 
 ### Unsupported DB version (SqlVersionProvider)
 
-`--skip-db-validation` only bypasses the initial pre-flight check. `SqlVersionProvider` runs again during "Installing database schema" and throws even with that flag set. The correct fix is a DI array merge in `app/etc/di.xml`:
+`--skip-db-validation` only bypasses the initial pre-flight check. `SqlVersionProvider` runs again during "Installing database schema" and throws even with that flag set. The correct fix is a DI array merge — place it in a **custom module's** `etc/di.xml` (e.g. `app/code/YourVendor/MagentoFixes/etc/di.xml`), not in `app/etc/di.xml`. The `app/etc/di.xml` file is owned by `magento/magento2-base` and can be overwritten during a future upgrade's root-file sync (Phase 11), silently removing the patch.
 
 ```xml
 <type name="Magento\Framework\DB\Adapter\SqlVersionProvider">
     <arguments>
         <argument name="supportedVersionPatterns" xsi:type="array">
-            <!-- Add unsupported MariaDB minor versions here -->
-            <item name="MariaDB-11.5-11.9" xsi:type="string">^11\.[5-9]\.</item>
+            <!-- Covers MariaDB 11.5 through 11.x (all minor versions) -->
+            <item name="MariaDB-11.5-plus" xsi:type="string">^11\.\d+\.</item>
         </argument>
     </arguments>
 </type>
 ```
 
-This merges additively with `vendor/magento/magento2-base/app/etc/di.xml` — no vendor edits required. The `getMariaDbSuffixKey()` method falls back to `10.6.11` for unrecognised 11.x versions, which is functionally correct for schema compatibility.
+The pattern `^11\.\d+\.` matches any MariaDB 11.x.y version (including 11.10, 11.11, etc.). The `[5-9]` single-digit class used in some examples only covers 11.5–11.9 and silently fails on 11.10+. This merges additively with core DI — no vendor edits required.
 
 ## Infrastructure Cache Flush
 

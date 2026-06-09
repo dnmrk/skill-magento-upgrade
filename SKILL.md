@@ -21,7 +21,7 @@ Step-by-step Magento 2 version upgrade. Track every phase with the host agent's 
 - **Never skip Phase 14 (setup:di:compile)** — missing DI compilation produces fatal errors on first page load.
 - **Disable cron before maintenance on (Phase 7)** — a cron firing mid-migration can corrupt the DB state.
 - **Never proceed to Phase 19 (deployment checklist) until Phase 18 (smoke test) passes** — HTTP 200 alone is not sufficient.
-- **Never skip Phase 20 (lessons)** — every upgrade produces learnings; capture them before closing the branch.
+- **Never skip Phase 20 (lessons + skill update)** — every upgrade produces learnings; capture them before closing the branch.
 - **"Flex recipes" does not exist in Magento** — the equivalent is root file conflict resolution (Phase 11).
 
 ## Signal → Reference Routing
@@ -75,7 +75,7 @@ Also detect the Magento root path (often `/var/www/html` or `/app`).
 Create visible progress tracking before starting. In Claude Code, use `TaskCreate`. Mark each phase complete as you finish it.
 
 **Required phases — create a task for every one, no exceptions:**
-Phase 1 (Backup), Phase 2 (Branch), Phase 3 (Release notes review), Phase 4 (Vendor sync), Phase 5 (UCT / compatibility check), Phase 6 (Rollback plan), Phase 7 (Cron disable + Maintenance on), Phase 9 (Version bump), Phase 10 (Composer update), Phase 11 (Root file sync), Phase 12 (Commit), Phase 13 (setup:upgrade), Phase 14 (DI compile), Phase 15 (Static content deploy), Phase 16 (Cache clean), Phase 17 (Reindex + Cron re-enable + Maintenance off), Phase 18 (Smoke test), Phase 19 (Deployment checklist), Phase 20 (Lessons).
+Phase 1 (Backup), Phase 2 (Branch), Phase 3 (Release notes review), Phase 4 (Vendor sync), Phase 5 (UCT / compatibility check), Phase 6 (Rollback plan), Phase 7 (Cron disable + Maintenance on), Phase 9 (Version bump), Phase 10 (Composer update), Phase 11 (Root file sync), Phase 12 (Commit), Phase 13 (setup:upgrade), Phase 14 (DI compile), Phase 15 (Static content deploy), Phase 16 (Cache clean), Phase 17 (Reindex + Cron re-enable + Maintenance off), Phase 18 (Smoke test), Phase 19 (Deployment checklist), Phase 20 (Lessons + Skill Update).
 
 Phase 8 (Infrastructure Gate) is conditional — required for major upgrades only.
 
@@ -340,9 +340,10 @@ If the user says yes:
    - Phase-specific gotcha → add a callout in the relevant phase section
    - Reference-file-level detail (build errors, composer patterns, smoke test steps) → add to the appropriate `references/*.md` file
 3. Do not rewrite existing content — add targeted rows or callouts only.
-4. Commit the skill updates separately from the upgrade branch:
+4. Commit the skill updates separately from the upgrade branch. The skill lives at `~/.claude/skills/magento-upgrade/` — resolve the actual path before running git commands (it may differ per machine; check `find ~/.claude/skills -name SKILL.md` if unsure):
    ```bash
-   git add /path/to/skill/SKILL.md /path/to/skill/references/
+   cd ~/.claude/skills/magento-upgrade
+   git add SKILL.md references/
    git commit -m "skill(magento-upgrade): apply lessons from <target_version> upgrade"
    ```
 

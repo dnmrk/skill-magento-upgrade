@@ -27,8 +27,8 @@
 | Not clearing `generated/` before `setup:di:compile` | Stale compiled proxies cause class-not-found errors | `rm -rf generated/code generated/metadata` before compile |
 | Deploying static content without specifying locales | Deploys all locales — very slow, fills disk | Specify `--theme` and locales explicitly in production |
 | Forgetting to flush Redis/Varnish after `cache:flush` | Old cached pages / config served after upgrade | Flush infrastructure caches separately from Magento cache |
-| Running `setup:install --cleanup-database` with existing `env.php` | "WebsiteRepository: default website isn't defined" — maintenance:enable reads website config from partially wiped DB | Drop+recreate the DB **and** delete `app/etc/env.php` + `app/etc/config.php` before running `setup:install` |
-| Relying on `--skip-db-validation` to bypass `SqlVersionProvider` | `--skip-db-validation` only skips the pre-flight check; `SqlVersionProvider` fires again during "Installing database schema" and still throws | Add unsupported version pattern to `app/etc/di.xml` via DI array merge (see build.md) |
+| Running `setup:install --cleanup-database` with existing `env.php` | "WebsiteRepository: default website isn't defined" — `setup:install` reads `env.php`, connects to the partially wiped DB, and cannot resolve the default website during schema installation | Drop+recreate the DB **and** delete `app/etc/env.php` + `app/etc/config.php` (and clear `generated/`) before running `setup:install` |
+| Relying on `--skip-db-validation` to bypass `SqlVersionProvider` | `--skip-db-validation` only skips the pre-flight check; `SqlVersionProvider` fires again during "Installing database schema" and still throws | Add unsupported version pattern via DI array merge in a **custom module's** `etc/di.xml` — not `app/etc/di.xml` which magento2-base can overwrite (see build.md) |
 
 ## Docker / markshust Setup
 

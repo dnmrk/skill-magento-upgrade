@@ -66,6 +66,22 @@ Note: `composer require` on the metapackage prints a warning ("does not function
 
 After downgrading, the top-level `"version"` field in `composer.json` is **not** updated by `composer require` (it only touches the `require` section). Update it manually to match.
 
+**After the composer step, run the full post-composer build sequence** — the DB schema, compiled DI, and caches still reflect the higher version until these complete:
+
+```bash
+docker compose exec <service> bin/magento setup:upgrade
+docker compose exec <service> bin/magento setup:di:compile
+docker compose exec <service> bin/magento setup:static-content:deploy -f en_US
+docker compose exec <service> bin/magento cache:clean
+docker compose exec <service> bin/magento cache:flush
+```
+
+Also clear `generated/` before `setup:di:compile` if downgrading across a major version — stale interceptors targeting the old version's class signatures will cause fatal errors:
+
+```bash
+docker compose exec <service> rm -rf /var/www/html/generated/code /var/www/html/generated/metadata
+```
+
 ## Verifying After Composer Update
 
 ```bash
