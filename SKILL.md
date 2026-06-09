@@ -84,12 +84,14 @@ Phase 8 (Infrastructure Gate) is conditional — required for major upgrades onl
 ### Phase 1 — Backup
 
 ```bash
-# Database
-docker compose exec <db-service> mysqldump -u<user> -p<pass> <db> | gzip > tasks/<target_version>/<current_version>_dump.sql.gz
+# Database — MariaDB 10.5+ containers ship mariadb-dump, not mysqldump
+docker compose exec <db-service> mariadb-dump -u<user> -p<pass> <db> | gzip > tasks/<target_version>/<current_version>_dump.sql.gz
 
-# Verify the dump is non-empty
+# Verify the dump is non-empty (a valid dump is always > 10KB compressed)
 ls -lh tasks/<target_version>/
 ```
+
+> **Gotcha:** `mysqldump` is absent from MariaDB 10.5+ images. The dump completes with no error but produces a ~100-byte file (headers only). Always check file size before proceeding.
 
 Also confirm file backups are in place (media, var, pub — or that these are excluded per deployment strategy).
 
@@ -140,6 +142,8 @@ docker compose exec <service> vendor/bin/upgrade-compatibility-tool upgrade:chec
 # If UCT is not installed:
 composer require magento/upgrade-compatibility-tool --dev
 ```
+
+> **Magento 2.4.8+ (Symfony 7 conflict):** UCT 3.0.21+ requires `symfony/dependency-injection ^6.4` but Magento 2.4.8 locks to Symfony 7.4.x — install fails with a constraint conflict. On projects with **zero custom/third-party modules**, document the skip rationale in `tasks/<target_version>/uct-result.md` and proceed. On projects with custom code, attempt the install with `-W` in a throwaway branch; if the full dep tree can't resolve, run UCT from a separate standalone installation pointed at the project path.
 
 → **Read `references/compatibility-check.md`** for output interpretation, severity levels, and third-party module handling before acting on any results.
 
@@ -209,6 +213,12 @@ For major upgrades, run with `-W` to allow transitive dependency updates:
 ```bash
 docker compose exec <service> composer update --no-interaction -W
 ```
+
+> **Named Docker volume ownership (markshust/docker-magento):** `appdata:/var/www/html` files are owned by the host user UID — the container's `www-data` cannot write `composer.json`. Run as root with the auth mount path set explicitly:
+> ```bash
+> docker compose exec -u root -e COMPOSER_HOME=/var/www/.composer <service> composer update --no-interaction
+> ```
+> Without `-e COMPOSER_HOME`, root's home (`/root`) misses the `~/.composer:/var/www/.composer` auth mount and repo.magento.com authentication fails with HTTP 401.
 
 ---
 
@@ -374,3 +384,7 @@ If the user says yes:
 | Forgetting to flush Redis/Varnish after `cache:flush` | Magento's cache:flush only clears Magento's registered cache backends — infrastructure caches need separate flushing |
 | Not verifying the DB backup before starting | An unverified backup is no backup — check file size and run a test restore on a spare DB |
 | Calling it "Flex recipes" | Magento doesn't use Symfony Flex; the step is root file conflict resolution from `magento2-base` updates |
+| Using `mysqldump` on MariaDB 10.5+ containers | `mysqldump` is absent; use `mariadb-dump` — the pipe to gzip masks the error and produces a ~100-byte empty dump |
+| Running `composer update` as default user on a named volume | Named volume files are owned by the host UID; the container's `www-data` can't write. Use `-u root -e COMPOSER_HOME=/var/www/.composer` |
+| Assuming UCT installs on any Magento version | Magento 2.4.8+ locks Symfony 7.4.x; UCT requires `symfony/dependency-injection ^6.4` — constraint conflict is unresolvable without breaking core deps |
+| Treating the "Page Cache invalidated" admin banner as a failure | Expected after `setup:upgrade` — it marks `full_page` stale internally. Run `cache:clean full_page` or click Cache Management. Not a sign of a broken upgrade |

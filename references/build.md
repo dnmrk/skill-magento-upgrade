@@ -28,6 +28,8 @@ Runs all pending `Schema\*` and `Data\*` patch classes plus legacy InstallSchema
 - Foreign key constraint violation — data patch running before schema patch
 - Duplicate entry error — data patch not idempotent; check `patch_list` table
 
+> **Post-upgrade "Page Cache invalidated" banner:** After `setup:upgrade` completes, the admin shows a yellow banner flagging `full_page` as invalidated. This is expected — `setup:upgrade` marks it stale internally even after a prior `cache:flush`. Run `bin/magento cache:clean full_page` in Phase 16 to clear it. Not an indicator of a failed upgrade.
+
 ```bash
 # Check which patches have run
 SELECT patch_name, is_applied FROM patch_list ORDER BY patch_name;

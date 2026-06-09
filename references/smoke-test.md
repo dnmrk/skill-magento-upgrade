@@ -43,6 +43,14 @@ In browser:
 - Open browser console → no critical JS errors (red)
 - Check one grid (e.g., Orders) loads without 500
 
+> **Credential tip:** If the admin password is unknown, reset it via CLI (safe — `admin:user:create` updates the password if the username already exists, it does not create a duplicate):
+> ```bash
+> bin/magento admin:user:create --admin-user=admin --admin-password=Test1234! \
+>   --admin-email=admin@example.com --admin-firstname=Admin --admin-lastname=Test
+> ```
+
+> **"Page Cache invalidated" banner:** The yellow admin banner flagging `full_page` as invalidated immediately after upgrade is expected — `setup:upgrade` marks it stale internally even after `cache:flush`. Run `bin/magento cache:clean full_page` or click Cache Management. This is not a sign of a failed upgrade.
+
 ## Log Triage
 
 ```bash
