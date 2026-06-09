@@ -318,7 +318,7 @@ Verify the site is operational. **Do not proceed to Phase 19 until this passes.*
 
 ---
 
-### Phase 20 — Compile Lessons
+### Phase 20 — Compile Lessons + Skill Update
 
 After every upgrade, close the loop. This phase must always run — even if the upgrade was routine.
 
@@ -328,6 +328,23 @@ Capture to `tasks/lessons.md`:
 - Infrastructure surprises
 - Time estimates vs. actual
 - Anything worth flagging for the next upgrade
+
+**After writing `tasks/lessons.md`, ask the user:**
+
+> "Want me to apply the lessons from this upgrade to the skill? I'll review `tasks/lessons.md` and fold any new patterns, gotchas, or command fixes into `SKILL.md` and the relevant reference files."
+
+If the user says yes:
+1. Read `tasks/lessons.md` in full.
+2. For each lesson, determine where it belongs:
+   - New command pattern or mistake → add to the **Common Mistakes** table in `SKILL.md`
+   - Phase-specific gotcha → add a callout in the relevant phase section
+   - Reference-file-level detail (build errors, composer patterns, smoke test steps) → add to the appropriate `references/*.md` file
+3. Do not rewrite existing content — add targeted rows or callouts only.
+4. Commit the skill updates separately from the upgrade branch:
+   ```bash
+   git add /path/to/skill/SKILL.md /path/to/skill/references/
+   git commit -m "skill(magento-upgrade): apply lessons from <target_version> upgrade"
+   ```
 
 ---
 
