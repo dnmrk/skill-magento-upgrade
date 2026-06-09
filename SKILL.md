@@ -187,10 +187,14 @@ If upgrading a **major** version, verify manually against the release notes:
 - PHP version requirement for the target release (`php -v`)
 - MySQL / MariaDB version requirement
 - Elasticsearch / OpenSearch version requirement
-- Redis version requirement
+- Redis / Valkey version requirement
 - Composer version (`composer --version`)
 
 This is a **manual decision gate** — confirm with the user before proceeding if infrastructure changes are needed.
+
+> **MariaDB minor upgrades (e.g. 11.4 → 11.8):** Swapping the image tag and restarting the container is sufficient — MariaDB auto-upgrades system tables on start. No `mariadb-upgrade` command needed for 11.x → 11.x bumps. **Critical rollback caveat:** the upgraded data directory cannot be read by the older image. If rollback is needed after a MariaDB minor bump, you **must** restore from the pre-upgrade DB dump — reverting the image tag alone will fail.
+
+> **Valkey / Redis minor upgrades:** Drop-in image tag swap. No data migration required when used for cache only. `cache:flush` after the container restarts is sufficient.
 
 ---
 
@@ -208,11 +212,13 @@ Edit `composer.json`: update `magento/product-community-edition` or `magento/pro
 docker compose exec <service> composer update --no-interaction
 ```
 
-For major upgrades, run with `-W` to allow transitive dependency updates:
+For **minor or major** upgrades, run with `-W` to allow transitive dependency updates:
 
 ```bash
 docker compose exec <service> composer update --no-interaction -W
 ```
+
+> **Minor version bumps need `-W` too.** A patch-to-minor bump (e.g. 2.4.8 → 2.4.9) pulls Symfony LTS bumps, JWT library changes, and PHPUnit version changes as transitive dependencies. Without `-W`, composer cannot resolve the constraint tree and fails. Use `-W` for any non-patch upgrade.
 
 > **Named Docker volume ownership (markshust/docker-magento):** `appdata:/var/www/html` files are owned by the host user UID — the container's `www-data` cannot write `composer.json`. Run as root with the auth mount path set explicitly:
 > ```bash
@@ -388,3 +394,5 @@ If the user says yes:
 | Running `composer update` as default user on a named volume | Named volume files are owned by the host UID; the container's `www-data` can't write. Use `-u root -e COMPOSER_HOME=/var/www/.composer` |
 | Assuming UCT installs on any Magento version | Magento 2.4.8+ locks Symfony 7.4.x; UCT requires `symfony/dependency-injection ^6.4` — constraint conflict is unresolvable without breaking core deps |
 | Treating the "Page Cache invalidated" admin banner as a failure | Expected after `setup:upgrade` — it marks `full_page` stale internally. Run `cache:clean full_page` or click Cache Management. Not a sign of a broken upgrade |
+| Using `composer update` without `-W` on a minor version bump | Minor bumps (e.g. 2.4.8→2.4.9) pull transitive framework changes (Symfony LTS, JWT, PHPUnit). Without `-W` the constraint tree fails to resolve. Use `-W` for any non-patch upgrade |
+| Reverting the MariaDB image tag to roll back after a minor upgrade | The upgraded data directory is incompatible with the older image — it will refuse to start. Rollback requires a full DB restore from the pre-upgrade dump |

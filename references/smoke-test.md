@@ -43,6 +43,13 @@ In browser:
 - Open browser console → no critical JS errors (red)
 - Check one grid (e.g., Orders) loads without 500
 
+> **2.4.9+ Admin CAPTCHA:** Magento 2.4.9 enables CAPTCHA on the admin login form by default (new security enforcement). This blocks browser-based smoke testing. Disable for dev environments:
+> ```bash
+> bin/magento config:set admin/captcha/enable 0
+> bin/magento cache:clean config
+> ```
+> Re-enable before any customer-facing deployment: `bin/magento config:set admin/captcha/enable 1`
+
 > **Credential tip:** If the admin password is unknown, reset it via CLI (safe — `admin:user:create` updates the password if the username already exists, it does not create a duplicate):
 > ```bash
 > bin/magento admin:user:create --admin-user=admin --admin-password=Test1234! \

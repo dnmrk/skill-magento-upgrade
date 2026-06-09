@@ -59,6 +59,7 @@ php -v
 ```
 
 Magento version → PHP compatibility matrix (key versions):
+- Magento 2.4.9.x → PHP 8.4
 - Magento 2.4.8.x → PHP 8.4
 - Magento 2.4.7.x → PHP 8.2, 8.3
 - Magento 2.4.6.x → PHP 8.1, 8.2
