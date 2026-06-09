@@ -220,6 +220,8 @@ docker compose exec <service> composer update --no-interaction -W
 
 > **Minor version bumps need `-W` too.** A patch-to-minor bump (e.g. 2.4.8 → 2.4.9) pulls Symfony LTS bumps, JWT library changes, and PHPUnit version changes as transitive dependencies. Without `-W`, composer cannot resolve the constraint tree and fails. Use `-W` for any non-patch upgrade.
 
+> **Rollbacks on named volumes — use `composer require`, not `composer update`:** `git checkout` on the host does **not** affect the named Docker volume. The volume's `composer.json` stays at the current version regardless of which branch the host is on. To downgrade: run `composer require magento/product-community-edition:<target> --no-update` inside the container to pin the constraint, then `composer update -W` to force transitive resolution downward. `composer update` alone reports "nothing to modify" because it resolves against the existing lock file.
+
 > **Named Docker volume ownership (markshust/docker-magento):** `appdata:/var/www/html` files are owned by the host user UID — the container's `www-data` cannot write `composer.json`. Run as root with the auth mount path set explicitly:
 > ```bash
 > docker compose exec -u root -e COMPOSER_HOME=/var/www/.composer <service> composer update --no-interaction
@@ -403,3 +405,6 @@ If the user says yes:
 | Using `composer update` without `-W` on a minor version bump | Minor bumps (e.g. 2.4.8→2.4.9) pull transitive framework changes (Symfony LTS, JWT, PHPUnit). Without `-W` the constraint tree fails to resolve. Use `-W` for any non-patch upgrade |
 | Reverting the MariaDB image tag to roll back after a minor upgrade | The upgraded data directory is incompatible with the older image — it will refuse to start. Rollback requires a full DB restore from the pre-upgrade dump |
 | Committing skill updates directly to `main` | **Never.** Always `git checkout -b skill/lessons-<version>` → commit → push → `gh pr create`. If the working tree is already clean, check `git log` — if the commit landed on `main`, open a retroactive PR |
+| Using `composer update` to roll back packages on a named volume | `git checkout` on the host doesn't touch the volume. Use `composer require <pkg>:<version> --no-update` inside the container to pin the constraint, then `composer update -W`. `composer update` alone sees the existing lock file and says "nothing to modify" |
+| Not wiping `generated/` after a version downgrade | Stale interceptors and factories from the higher version cause `ReflectionException: Class does not exist` on indexers and page load. Always `rm -rf generated/code generated/metadata` then re-run `setup:di:compile` after any downgrade |
+| Running `indexer:reindex` after rolling back from 2.4.9 to 2.4.8-p5 without fixing `eav_attribute` | The p5 data patch writes `SpecialFromDate`/`SpecialToDate` as `attribute_model` for attributes 79/80, but those classes only ship with 2.4.9. Fix before reindexing: `UPDATE eav_attribute SET attribute_model = NULL WHERE attribute_id IN (79, 80);` then `cache:clean` |
