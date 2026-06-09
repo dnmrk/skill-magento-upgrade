@@ -361,6 +361,7 @@ If the user says yes:
 4. **NEVER push directly to `main`.** Always open a PR — even for a single-line change. The exact sequence, no exceptions:
    ```bash
    cd ~/.claude/skills/magento-upgrade
+   git checkout main && git pull origin main
    git checkout -b skill/lessons-<target_version>
    git add SKILL.md references/
    git commit -m "skill(magento-upgrade): apply lessons from <target_version> upgrade"
