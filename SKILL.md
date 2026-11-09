@@ -1,6 +1,6 @@
 ---
 name: magento-upgrade
-description: Use when upgrading a Magento 2 / Adobe Commerce installation to a newer version — patch, minor, or major. Triggers: target version specified, composer.json constraint needs updating, extension or module compatibility unknown, maintenance window required, UCT warnings need interpretation, deprecated or removed APIs found, version bump blocked by constraint conflicts, or DB migration required after version change.
+description: "Use when upgrading a Magento 2 / Adobe Commerce installation to a newer version — patch, minor, or major. Triggers: target version specified, composer.json constraint needs updating, extension or module compatibility unknown, maintenance window required, UCT warnings need interpretation, deprecated or removed APIs found, version bump blocked by constraint conflicts, or DB migration required after version change."
 allowed-tools:
   - Read
   - Glob
